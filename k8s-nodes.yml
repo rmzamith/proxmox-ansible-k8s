@@ -1,0 +1,9 @@
+---
+- name: Initial Setup of k8s Node
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Install containerd
+      apt:
+        name: containerd
+        state: present
