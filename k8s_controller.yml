@@ -1,0 +1,35 @@
+---
+- name: Initial Setup of k8s Controller
+  hosts: localhost
+  become: true
+  roles:
+    - common
+  tasks:
+    - name: Init Kubernetes controller
+      ansible.builtin.command:
+        cmd: kubeadm init --control-plane-endpoint={{ kube_control_plane_endpoint }} --node-name k8s-controller --pod-network-cidr={{ pod_network_cidr }}
+    - name: Create Kubernetes join token
+      ansible.builtin.command:
+        cmd: kubeadm token create {{ kubeadm_join_token }} --ttl 10m
+    - name: Create {{ pve_user }} user .kube directory
+      ansible.builtin.file:
+        path: /home/{{ pve_user }}/.kube
+        state: directory
+        mode: '0700'
+        owner: "{{ pve_user }}"
+        group: "{{ pve_user }}"
+    - name: Copy kube config to {{ pve_user }} user
+      ansible.builtin.copy:
+        dest: /home/{{ pve_user }}/.kube/config
+        src: /etc/kubernetes/admin.conf
+        remote_src: yes
+        owner: "{{ pve_user }}"
+        group: "{{ pve_user }}"
+        mode: '0644'
+    - name: Install Pod network CNI add-on (Flannel)
+      ansible.builtin.command:
+        cmd: kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+      environment:
+        KUBECONFIG: /home/{{ pve_user }}/.kube/config
+      become: true
+      become_user: "{{ pve_user }}"
