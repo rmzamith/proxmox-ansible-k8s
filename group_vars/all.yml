@@ -3,3 +3,4 @@ pve_user: pve
 kubeadm_join_token: 7cfr24.80wx57mc7g8jplib
 kube_control_plane_endpoint: 192.168.70.70
 pod_network_cidr: 10.244.0.0/16
+nfs_host: 192.168.70.99

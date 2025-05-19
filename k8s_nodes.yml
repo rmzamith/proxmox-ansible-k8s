@@ -9,3 +9,8 @@
       ansible.builtin.command:
         # Using '--discovery-token-unsafe-skip-ca-verification' because it is a local proxmox server. Do not do this in production environments
         cmd: kubeadm join {{ kube_control_plane_endpoint }}:6443 --token {{ kubeadm_join_token }} --discovery-token-unsafe-skip-ca-verification
+    - name: Install NFS Common
+      ansible.builtin.apt:
+          pkg:
+            - nfs-common
+          state: present
