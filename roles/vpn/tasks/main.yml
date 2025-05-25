@@ -1,0 +1,6 @@
+- name: Install OpenVPN Common
+  ansible.builtin.apt:
+      pkg:
+        - easy-rsa
+        - openvpn
+      state: present
