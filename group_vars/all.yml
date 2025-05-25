@@ -3,3 +3,6 @@ pve_user: pve
 kubeadm_join_token: 7cfr24.80wx57mc7g8jplib
 kube_control_plane_endpoint: 192.168.70.70
 pod_network_cidr: 10.244.0.0/16
+metallb_addresses: 192.168.70.240-192.168.70.250
+protonvpn_ovpn_profile_path: /home/{{ pve_user }}/protonvpn/ch.protonvpn.udp.ovpn
+protonvpn_credentials_path: /home/{{ pve_user }}/protonvpn/credentials_proton

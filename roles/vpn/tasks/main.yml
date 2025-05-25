@@ -1,0 +1,16 @@
+- name: Install OpenVPN Common
+  ansible.builtin.apt:
+      pkg:
+        - easy-rsa
+        - openvpn
+      state: present
+- name: Create ProtonVPN etc directory
+  ansible.builtin.file:
+    path: /etc/protonvpn
+    state: directory
+    mode: '0755'
+- name: Copy OpenVPN systemd unit to host
+  ansible.builtin.template:
+    src: vpn.service.j2
+    dest: /etc/systemd/system/vpn.service
+    mode: '0644'

@@ -1,7 +1,8 @@
 ---
-- name: Initial Setup of k8s Node
+- name: Initial Setup of k8s Node (Embedded VPN)
   hosts: localhost
   become: true
   roles:
     - common
     - nodes
+    - vpn

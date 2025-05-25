@@ -1,0 +1,74 @@
+- name: Init Kubernetes controller
+  ansible.builtin.command:
+    cmd: kubeadm init --control-plane-endpoint={{ kube_control_plane_endpoint }} --node-name k8s-controller --pod-network-cidr={{ pod_network_cidr }}
+- name: Create Kubernetes join token
+  ansible.builtin.command:
+    cmd: kubeadm token create {{ kubeadm_join_token }} --ttl 10m
+- name: Create {{ pve_user }} user .kube directory
+  ansible.builtin.file:
+    path: /home/{{ pve_user }}/.kube
+    state: directory
+    mode: '0700'
+    owner: "{{ pve_user }}"
+    group: "{{ pve_user }}"
+- name: Copy kube config to {{ pve_user }} user
+  ansible.builtin.copy:
+    dest: /home/{{ pve_user }}/.kube/config
+    src: /etc/kubernetes/admin.conf
+    remote_src: yes
+    owner: "{{ pve_user }}"
+    group: "{{ pve_user }}"
+    mode: '0644'
+- name: Install Flannel CNI with Helm
+  community.kubernetes.helm:
+    name: flannel
+    chart_ref: flannel
+    chart_repo_url: https://flannel-io.github.io/flannel
+    release_namespace: kube-flannel
+    create_namespace: true
+    state: present
+    dependency_update: true
+    kubeconfig: /home/{{ pve_user }}/.kube/config
+  become: true
+  become_user: "{{ pve_user }}"
+- name: Install MetalLB with Helm
+  community.kubernetes.helm:
+    name: metallb
+    chart_ref: metallb
+    chart_repo_url: https://charts.bitnami.com/bitnami
+    release_namespace: metallb-system
+    create_namespace: true
+    state: present
+    dependency_update: true
+    kubeconfig: /home/{{ pve_user }}/.kube/config
+  become: true
+  become_user: "{{ pve_user }}"
+- name: Copy Metallb config to controller host
+  ansible.builtin.template:
+    src: metallb-config.yml.j2
+    dest: /tmp/metallb-config.yml
+    mode: '0644'
+  become: true
+  become_user: "{{ pve_user }}"
+- name: Apply Metallb configuration
+  ansible.builtin.command:
+    chdir: /tmp
+    cmd: kubectl apply -f metallb-config.yml
+  become: true
+  become_user: "{{ pve_user }}"
+- name: Install/Upgrade ingress-nginx Helm chart
+  community.kubernetes.helm:
+    name: ingress-nginx
+    chart_ref: ingress-nginx
+    chart_repo_url: https://kubernetes.github.io/ingress-nginx
+    release_namespace: ingress-nginx
+    create_namespace: true
+    values:
+      controller:
+        service:
+          type: LoadBalancer
+    state: present
+    dependency_update: true
+    kubeconfig: /home/{{ pve_user }}/.kube/config
+  become: true
+  become_user: "{{ pve_user }}"
