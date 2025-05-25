@@ -1,0 +1,17 @@
+[Unit]
+Description=VPN Service (ProtonVPN)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Disable IPv6 before starting the VPN
+ExecStartPre=/usr/bin/sysctl -w net.ipv6.conf.all.disable_ipv6=1
+# Start OpenVPN using your configuration and credentials file
+ExecStart=/usr/bin/openvpn --config {{ protonvpn_ovpn_profile_path }} --auth-user-pass {{ protonvpn_credentials_path }}
+# After the service stops, re-enable IPv6
+ExecStopPost=/usr/bin/sysctl -w net.ipv6.conf.all.disable_ipv6=0
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
